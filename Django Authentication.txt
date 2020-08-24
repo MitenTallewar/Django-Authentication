@@ -1,0 +1,140 @@
+rest_frame_work Authenrication
+	
+	Aythentication-- if user have username and  password --authenticate
+				   - if user have token -authenticate
+					example--
+							Admin - x
+							guest - y
+							clerk - z
+							
+	Authorization-- permission which user have(roles and responsibilities)
+					example
+						x- all(permission)
+						y- read --permission
+						z- read, create and modify(can not delete-permissions)
+		
+		first authenticate the user and after that authorize the user 
+		
+	->Types of Authenntication
+		1)Basic authentication
+			--Everytime client login threw username and password
+		2)Token authentication
+			--One time client login with username and password after that server generate token for client, and client will use that token for furthur coommuncation
+		3)Session Authentication
+			--every time user login with userame and password, Server will generate token, after that token putting in session.
+			--within that session user will send token(no need to enter username and password), once token expired that token will not work
+			--next login with username and password -- will generate token give it to session
+		
+
+-->In settings.py 
+		->installed apps mention following apps
+			->rest_framework -- to provide Rest api
+			->rest_framework_swagger -- for uris request/respose formate
+			->rest_framework.authtoken -- for Security Purpose
+										- before migrate
+										- to create table in db(authtoken_token)
+			
+			
+		-> add 
+			REST_FRAMEWORK = {
+				#latest drf - version -- swagger --> compatibility issue
+				'DEFAULT_SCHEMA_CLASS':'rest_framework.schemas.coreapi.AutoSchema',
+				#I want rest apis to be secured with token -->2 --> user --> server [username/password] --> Token -
+				'DEFAULT_AUTHENTICATION_CLASSES': [
+												   'rest_framework.authentication.TokenAuthentication',
+												 # 'rest_framework.authentication.SessionAuthentication',
+												 # 'rest_framework.authentication.BaseAuthentication',
+                                       ],
+
+
+	-->commands for generating commands
+		-manage.py drf_create_token username
+		
+		
+		--DRF provide permissions classes
+			1)IsAuthenticated -- valid username password -- valid token -->create user-->role-- normal/admin
+			2)IsAdminUser -- valid username password -- valid admin token --create user -- admin (not guest/not staff---they also have token but not admin)  
+			3)AllowAny --- can access by any user
+			4)IsAuthenticatedOrReadOnly
+			
+			first we have to mention that in settings.py -- REST_FRAMEWORK dictionary
+			
+			-->'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',]
+			
+				for token authentication
+						IsAuthenticated -- User must have username password if basic authentication
+										- User must have token if tokenbase authentication
+										- if BaseAuthentication user must hae token inside session	
+										
+				for Baseauthentication - User must have username password for baseauthentication after login token generate and session will hold token
+				
+				
+				NOTE--->Same permission of Permission class will act differently for authentication classes
+				
+				
+		Secure all URI--
+				-settings.py --
+					'DEFAULT_AUTHENTICATION_CLASSES': [
+												   'rest_framework.authentication.TokenAuthentication',
+												 # 'rest_framework.authentication.SessionAuthentication',
+												 # 'rest_framework.authentication.BaseAuthentication',
+                                       ],
+					-all user can access if they have token.
+					-if we mention in settings.py it will apply for entire appliction
+					
+				- views.py
+				from rest_frame_work.permissions import IsAuthenticated
+					-add permission_class =(IsAuthenticated,)
+					
+					
+					-need token to access any of the uri from application
+					-this is for class level.
+					
+					
+	default permission --> to secure all entire app    settings.py DEFAULT_PERMISSION_CLASSES = IsAuthenticated or IsAdminUser or AllowAny
+						   to bypass use Allowany(anybody can access)-all class restricted excluding one class
+	
+	
+	to secure specific class --> views.py -->  specific class--> permission_class = (IsAuthenticated,)
+		IsAuthenticated -- Allow access to authenticate user. -- authenticate in terms of token.
+		
+		IsAdminUser -- Allow access to admin user-- token required as well as user must have Admin role.(is superusrer in django)
+		
+		IsAuthenticatedOrReadOnly -- can access only django safe methods --GET,HEAD & OPTION
+									GET--retrive
+										data retrive from server/db --single or many
+										request - no body
+										response -body
+									HEAD -Acknowledge with status code
+										 -request -	body
+										 -response - no body
+										 -server will give status code
+									OPTION-server Capabilities
+										  - what capabilies server have
+										  
+		AllowAny -- all method access by user.
+		 
+	to secure specific methods  --> get_permissions --self.action == 'methods check it inside mixxin class'
+			-inside views.py
+				
+			def get_permissions(self): #restricted method -- list,retrive and destroy -- can access by user with valid token
+				if self.action == 'list' or self.action == 'retrieve' or self.action == 'destroy':
+					self.permission_classes = (IsAdminUser,)
+				return super().get_permissions()
+					
+					
+	to securespecific object
+			- depending on conition exmample--> admin with  10 years of experience -- we need to write permission for this
+			
+			-create class make a child of BasePermissions class as shwon below
+			 def has_permission(self, request, view):
+					"""
+					Return `True` if permission is granted, `False` otherwise.
+					"""
+					return True
+
+			def has_object_permission(self, request, view, obj):
+					"""
+					Return `True` if permission is granted, `False` otherwise.
+					"""
+					return True
