@@ -12,6 +12,7 @@ class CustomPermissions(BasePermission):
 
 
     def has_object_permission(self, request, view, obj):
+        print(request.user)
         info = request.data
         data = info.get('desig')
         if data == 'Manager':

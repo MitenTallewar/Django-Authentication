@@ -57,14 +57,13 @@ def get_all_students(token):
     print('status code-->',response.status_code)
     print(response.json())
 
-import sys
-if __name__ == '__main__':
 
-    response=get_token_for_user('mitentallewar','miten')
+if __name__ == '__main__':
+    response = get_token_for_user('mitentallewar','miten')
     print(response)
     app_token='Token {}'.format(response.get('token'))
     dict_token_val = {'Authorization': app_token}
-    # print("dict token value-->",dict_token_val)
+    # # print("dict token value-->",dict_token_val)
     # get_all_emps_without_token()
     # print('---------------')
     # get_all_studs_without_token()
